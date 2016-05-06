@@ -53,7 +53,7 @@ typedef union rgba_t {
         uint8_t g;
         uint8_t r;
         uint8_t a;
-    };
+    } rgba;
     uint32_t v;
 } rgba_t;
 
@@ -116,16 +116,16 @@ fill_gradient (xcb_drawable_t d, int x, int y, int width, int height, rgba_t sta
 
     for (i = 0.; i < 1.; i += (1. / K)) {
         // Perform the linear interpolation magic
-        unsigned int rr = i * stop.r + (1. - i) * start.r;
-        unsigned int gg = i * stop.g + (1. - i) * start.g;
-        unsigned int bb = i * stop.b + (1. - i) * start.b;
+        unsigned int rr = i * stop.rgba.r + (1. - i) * start.rgba.r;
+        unsigned int gg = i * stop.rgba.g + (1. - i) * start.rgba.g;
+        unsigned int bb = i * stop.rgba.b + (1. - i) * start.rgba.b;
 
         // The alpha is ignored here
         rgba_t step = {
-            .r = rr,
-            .g = gg,
-            .b = bb,
-            .a = 255,
+            .rgba.r = rr,
+            .rgba.g = gg,
+            .rgba.b = bb,
+            .rgba.a = 255,
         };
 
         xcb_change_gc(c, gc[GC_DRAW], XCB_GC_FOREGROUND, (const uint32_t []){ step.v });
@@ -299,7 +299,7 @@ parse_color (const char *str, char **end, const rgba_t def)
                   | (tmp.v & 0x00f) * 0x0011;
         case 6:
             // If the code is in #rrggbb form then assume it's opaque
-            tmp.a = 255;
+            tmp.rgba.a = 255;
             break;
         case 7:
         case 8:
@@ -311,13 +311,13 @@ parse_color (const char *str, char **end, const rgba_t def)
     }
 
     // Premultiply the alpha in
-    if (tmp.a) {
+    if (tmp.rgba.a) {
         // The components are clamped automagically as the rgba_t is made of uint8_t
         return (rgba_t){
-            .r = (tmp.r * tmp.a) / 255,
-            .g = (tmp.g * tmp.a) / 255,
-            .b = (tmp.b * tmp.a) / 255,
-            .a = tmp.a,
+            .rgba.r = (tmp.rgba.r * tmp.rgba.a) / 255,
+            .rgba.g = (tmp.rgba.g * tmp.rgba.a) / 255,
+            .rgba.b = (tmp.rgba.b * tmp.rgba.a) / 255,
+            .rgba.a = tmp.rgba.a,
         };
     }
 
